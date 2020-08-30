@@ -1,11 +1,11 @@
-API:
+**API:**
 
 1. Список всех постов
-GET /api/v1/posts
+GET https://arshposts.herokuapp.com/api/v1/posts
 2. Один пост
-GET /api/v1/posts/{postId}
+GET https://arshposts.herokuapp.com/api/v1/posts/{post_Id}
 3. Добавить пост
-POST /api/v1/posts*
+POST https://arshposts.herokuapp.com/api/v1/posts
 {
     "id":"id(default:-1)"
 	"author_id": "author",
@@ -13,10 +13,10 @@ POST /api/v1/posts*
 	"content": "content"
 }
 4. Удалить пост
-DELETE /api/v1/posts/{postId}
+DELETE https://arshposts.herokuapp.com/api/v1/posts/{post_Id}
 5. Лайк пост
-POST /api/v1/posts/like/{postId}
+POST https://arshposts.herokuapp.com/api/v1/posts/like/{post_Id}
 6. Дислайк с поста
-POST /api/v1/posts/dislike/{postId}
+POST https://arshposts.herokuapp.com/api/v1/posts/dislike/{post_Id}
 7. Расшарить пост
-POST /api/v1/posts/share/{postId}
+POST https://arshposts.herokuapp.com/api/v1/posts/share/{post_Id}
