@@ -38,3 +38,4 @@ dependencies {
     implementation 'org.kodein.di:kodein-di-generic-jvm:6.3.3'
     implementation 'org.kodein.di:kodein-di-framework-ktor-server-jvm:6.3.3'
 }
+task stage(dependsOn: installDist)

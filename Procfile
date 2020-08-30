@@ -1,1 +1,1 @@
-web: ./build/install/crud/bin/crud
+web: ./build/install/example/bin/example
