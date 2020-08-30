@@ -51,6 +51,9 @@ fun Application.module(testing: Boolean = false) {
             throw e
         }
     }
+    install(DefaultHeaders) {
+        header("X-Engine", "Ktor") // will send this header with each response
+    }
     install(KodeinFeature) {
         bind<AuthorsRepository>() with singleton {
             AuthorsRepositoryInMemory().apply {

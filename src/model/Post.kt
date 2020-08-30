@@ -4,7 +4,7 @@ import java.util.*
 
 data class Post(
     val id: Long,
-    val postType: PostTypes,
+    val postType: PostTypes=PostTypes.POSTBASIC,
     val author_id: Long,
     val content: String,
     var created: Date,
