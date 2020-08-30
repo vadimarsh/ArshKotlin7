@@ -13,7 +13,11 @@ apply plugin: 'application'
 
 group 'com.example'
 version '0.0.1'
-mainClassName = "io.ktor.server.netty.EngineMain"
+//mainClassName = "io.ktor.server.netty.EngineMain"
+
+application{
+    mainClassName = "com.example.ApplicationKt"
+}
 
 sourceSets {
     main.kotlin.srcDirs = main.java.srcDirs = ['src']
@@ -38,4 +42,5 @@ dependencies {
     implementation 'org.kodein.di:kodein-di-generic-jvm:6.3.3'
     implementation 'org.kodein.di:kodein-di-framework-ktor-server-jvm:6.3.3'
 }
+
 task stage(dependsOn: installDist)
