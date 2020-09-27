@@ -1,22 +1,52 @@
 **API:**
 
-1. Список всех постов
+Доступны без авторизации:
+1. Статичный контент
+GET https://arshposts.herokuapp.com/api/v1/static/{content_name}
+2. Загрузить медиа на сервер
+POST https://arshposts.herokuapp.com/api/v1/media
+3. Регистрация нового пользователя
+POST https://arshposts.herokuapp.com/api/v1/registration
+4. Аутентификация пользователя
+POST https://arshposts.herokuapp.com/api/v1/authentication
+
+После аутентифакии зарегистрированным пользователям доступны:
+
+5. Получить токен
+GET https://arshposts.herokuapp.com/api/v1/me
+6. Получить все посты
 GET https://arshposts.herokuapp.com/api/v1/posts
-2. Один пост
+7. Получить конкретный пост
 GET https://arshposts.herokuapp.com/api/v1/posts/{post_Id}
-3. Добавить пост
+8. Добавить пост
 POST https://arshposts.herokuapp.com/api/v1/posts
-{
-    "id":"id(default:-1)"
-	"author_id": "author",
-	"posttype":"posttype"
-	"content": "content"
-}
-4. Удалить пост
+9. Изменить свой пост по id
+POST https://arshposts.herokuapp.com/api/v1/posts/{post_Id}
+10. Удалить свой пост по id
 DELETE https://arshposts.herokuapp.com/api/v1/posts/{post_Id}
-5. Лайк пост
+11. Лайк пост по id
 POST https://arshposts.herokuapp.com/api/v1/posts/like/{post_Id}
-6. Дислайк с поста
+12. Дислайк с поста по id
 POST https://arshposts.herokuapp.com/api/v1/posts/dislike/{post_Id}
-7. Расшарить пост
+13. Репост поста по id
 POST https://arshposts.herokuapp.com/api/v1/posts/share/{post_Id}
+
+JSON для авторизации/регистрации
+{
+    "username": "login_value",
+    "password": "password_value"
+}
+
+JSON поста:
+{   
+	"id": "long_value",
+    "postType": "POSTBASIC",
+    "author_name": "login_value",
+    "content": "content_value",
+    "created": "time_value",    
+    "coord": "pair",
+    "videoUrl": "url",
+    "repost": "post_id",
+    "promoImgUrl": "url",
+    "promoUrl": "url"
+}

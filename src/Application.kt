@@ -1,31 +1,41 @@
 package com.example
 
-import com.example.model.Author
+import com.example.exception.ConfigurationException
+import com.example.exception.InvalidPasswordException
+import com.example.exception.UserNameExistException
 import com.example.model.Post
 import com.example.model.PostTypes
+
 import com.example.repository.AuthorsRepository
 import com.example.repository.AuthorsRepositoryInMemory
 import com.example.repository.PostsRepository
 import com.example.repository.PostsRepositoryInMemory
-import com.example.route.v1
+import com.example.route.RoutingV1
+import com.example.services.FileService
+import com.example.services.JWTTokenService
+import com.example.services.PostService
+import com.example.services.UserService
 import io.ktor.application.*
+import io.ktor.auth.*
+import io.ktor.auth.jwt.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.http.*
 import io.ktor.gson.*
 import io.ktor.features.*
 import kotlinx.coroutines.runBlocking
-import org.kodein.di.generic.bind
-import org.kodein.di.generic.singleton
+import org.kodein.di.generic.*
 import org.kodein.di.ktor.KodeinFeature
-import java.text.SimpleDateFormat
+import org.kodein.di.ktor.kodein
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import org.springframework.security.crypto.password.PasswordEncoder
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
-
 
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
+
     install(ContentNegotiation) {
         gson {
             setPrettyPrinting()
@@ -35,124 +45,92 @@ fun Application.module(testing: Boolean = false) {
     install(StatusPages) {
         exception<NotImplementedError> { e ->
             call.respond(HttpStatusCode.NotImplemented)
-            throw e
+            //throw e
         }
-        exception<NotFoundException> {e->
+        exception<NotFoundException> { e ->
             call.respond(HttpStatusCode.NotFound)
-            throw e
+            //throw e
         }
-        exception<ParameterConversionException> {e->
+        exception<ParameterConversionException> { e ->
             call.respond(HttpStatusCode.BadRequest)
-            throw e
+            // throw e
         }
-
+        exception<InvalidPasswordException> { e ->
+            call.respond(HttpStatusCode.BadRequest, "Доступ запрещен: неверный пароль")
+            //throw e
+        }
+        exception<UserNameExistException> { e ->
+            call.respond(HttpStatusCode.BadRequest, "Пользователь с таким именем уже зарегистрирован")
+            //throw e
+        }
         exception<Throwable> { e ->
             call.respond(HttpStatusCode.InternalServerError)
-            throw e
+            //throw e
         }
     }
-    install(DefaultHeaders) {
-        header("X-Engine", "Ktor") // will send this header with each response
-    }
+
+
     install(KodeinFeature) {
-        bind<AuthorsRepository>() with singleton {
-            AuthorsRepositoryInMemory().apply {
+        constant(tag = "upload-dir") with (environment.config.propertyOrNull("arsh.upload.dir")?.getString()
+                ?: throw ConfigurationException("Upload dir is not specified"))
+        bind<PasswordEncoder>() with eagerSingleton { BCryptPasswordEncoder() }
+        bind<JWTTokenService>() with eagerSingleton { JWTTokenService() }
+        bind<PostsRepository>() with eagerSingleton {
+            PostsRepositoryInMemory().apply {
                 runBlocking {
                     save(
-                        Author(
-                            -1,
-                            "Вадим Аршинский",
-                            "default"
-                        )
+                            Post(
 
+                                    postType = PostTypes.POSTBASIC,
+                                    content = "Первый пост!! Привет мир!",
+                                    author = "Вадим Аршинский"
+                            )
                     )
                     save(
-                        Author(
-                            -1,
-                            "Google",
-                            "https://lh3.googleusercontent.com/_RS8nTX8HLPW-dDr374dEdQTaYn-7LI8HVVk0INaAmk7t8MYZKDssvGnep-GwPR94LJPxqq6UDnbm4tonioTpkl4Kqr6-k-670teZA=h128"
-                        )
-
+                            Post(
+                                    postType = PostTypes.POSTEVENT,
+                                    content = "На острове Ольхон, который является сакральным центром силы Байкала, расположен мыс Шаманка, который является обиталещем главного бурхана всей территории",
+                                    coord = Pair("53.203965", "107.338867"),
+                                    author = "Вадим Аршинский"
+                            )
                     )
                 }
             }
         }
-        bind<PostsRepository>() with singleton {
-            PostsRepositoryInMemory().apply {
+        bind<PostService>() with eagerSingleton { PostService(instance()) }
+        bind<FileService>() with eagerSingleton { FileService(instance(tag = "upload-dir")) }
+        bind<AuthorsRepository>() with eagerSingleton {
+            AuthorsRepositoryInMemory()
+        }
+        bind<UserService>() with eagerSingleton {
+            UserService(instance(), instance(), instance()).apply {
                 runBlocking {
-                    save(
-                        Post(
-                            0,
-                            PostTypes.POSTBASIC,
-                            1,
-                            "Первый пост!! Привет мир!",
-                            SimpleDateFormat("dd-MM-yyyy").parse("15-07-2020")!!,
-                            56,
-                            100,
-                            1
-                        )
-                    )
-                    save(Post(
-                        0,
-                        PostTypes.POSTEVENT,
-                        1,
-                        "На острове Ольхон, который является сакральным центром силы Байкала, расположен мыс Шаманка, который является обиталещем главного бурхана всей территории",
-                        SimpleDateFormat("dd-MM-yyyy").parse("17-07-2020")!!,
-                        0,
-                        0,
-                        0,
-                        false,
-                        false,
-                        false,
-                        "РФ, Иркутская область, п. Хужир",
-                        coord = Pair("53.203965", "107.338867")
-                    ))
-                    save(Post(
-                        0,
-                        PostTypes.POSTVIDEO,
-                        2,
-                        "Мыс Бурхан зимой (кликните на картинку для просмотра)",
-                        SimpleDateFormat("dd-MM-yyyy").parse("01-03-2020")!!,
-                        3,
-                        1,
-                        1,
-                        true,
-                        videoUrl = "https://youtu.be/73syI1uEWsM"
-                    ))
-                    save(Post(
-                        0,
-                        PostTypes.POSTREPOST,
-                        1,
-                        "Репост!",
-                        SimpleDateFormat("dd-MM-yyyy").parse("30-08-2020")!!,
-                        1,
-                        1,
-                        1,
-                        true,
-                        repost_id = 1
-                    ))
+                    this@apply.save("Вадим Аршинский", "123456")
+                    this@apply.save("Дональд Трамп", "qwerty")
                 }
+            }
+        }
+        bind<RoutingV1>() with eagerSingleton { RoutingV1(instance(tag = "upload-dir"), instance(), instance(), instance()) }
+    }
+
+    install(Authentication) {
+        jwt {
+            val jwtService by kodein().instance<JWTTokenService>()
+            verifier(jwtService.verifier)
+            val userService by kodein().instance<UserService>()
+
+            validate {
+                val id = it.payload.getClaim("id").asLong()
+                userService.getModelById(id)
             }
         }
     }
 
     install(Routing) {
-       v1()
+        val routingV1 by kodein().instance<RoutingV1>()
+        routingV1.setup(this)
     }
 
 }
-
-
-/*routing {
-    get("/") {
-
-        call.respondText("HELLO WORLD!", contentType = ContentType.Text.Plain)
-
-    }
-
-    get("/json/gson") {
-        call.respond(mapOf("hello" to "world"))
-    }
-}*/
 
 

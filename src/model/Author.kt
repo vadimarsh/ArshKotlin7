@@ -1,7 +1,9 @@
 package com.example.model
 
-data class Author (
-    val id: Long = 0,
-    val username: String,
-    val avatarurl: String
-)
+import io.ktor.auth.*
+
+data class Author(
+        val id: Long = 0,
+        val username: String,
+        val password: String
+) : Principal
