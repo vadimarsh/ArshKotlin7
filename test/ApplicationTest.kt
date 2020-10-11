@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import io.ktor.application.*
 import io.ktor.config.*
 import io.ktor.http.*
+import io.ktor.http.cio.*
 
 import io.ktor.http.content.*
 import kotlin.test.*
@@ -24,11 +25,12 @@ class ApplicationTest {
     private val configure: Application.() -> Unit = {
         (environment.config as MapApplicationConfig).apply {
             put("arsh.upload.dir", uploadPath)
+            put("arsh.api.result-size", "50")
         }
         module()
     }
 
-    @org.junit.Test
+    /*@org.junit.Test
     fun testUpload() {
         withTestApplication(configure) {
             with(handleRequest(HttpMethod.Post, "/api/v1/media") {
@@ -60,7 +62,7 @@ class ApplicationTest {
                 assertTrue(response.content!!.contains("\"id\""))
             }
         }
-    }
+    }*/
 
     @org.junit.Test
     fun testUnauthorized() {
@@ -82,8 +84,8 @@ class ApplicationTest {
                     setBody(
                             """
                         {
-                            "username": "Вадим Аршинский",
-                            "password": "123456"
+                            "username": "Vadim",
+                            "password": "qwerty123456"
                         }
                     """.trimIndent()
                     )
@@ -100,7 +102,7 @@ class ApplicationTest {
                     response
                     assertEquals(HttpStatusCode.OK, response.status())
                     val username = JsonPath.read<String>(response.content!!, "$.username")
-                    assertEquals("Вадим Аршинский", username)
+                    assertEquals("Vadim", username)
                 }
             }
         }
@@ -116,15 +118,16 @@ class ApplicationTest {
                     setBody(
                             """
                         {
-                            "username": "Вадим Аршинский",
-                            "password": "666"
+                            "username": "Vadim",
+                            "password": "qwerty12345"
                         }
                     """.trimIndent()
                     )
                 }) {
                     response
-                    assertEquals(HttpStatusCode.BadRequest, response.status())
                     println(response.content)
+                    assertEquals(HttpStatusCode.BadRequest, response.status())
+
                 }
             }
         }
@@ -140,8 +143,8 @@ class ApplicationTest {
                     setBody(
                             """
                         {
-                            "username": "Фёдор Достевский",
-                            "password": "135"
+                            "username": "Peter",
+                            "password": "a12345678"
                         }
                     """.trimIndent()
                     )
@@ -186,6 +189,39 @@ class ApplicationTest {
              }
          }
      }*/
+    @org.junit.Test
+    fun testGetPosts() {
+        withTestApplication(configure) {
+            runBlocking {
+                var token: String? = null
+                with(handleRequest(HttpMethod.Post, "/api/v1/authentication") {
+                    addHeader(HttpHeaders.ContentType, jsonContentType.toString())
+                    setBody(
+                            """
+                         {
+                             "username": "Vadim",
+                             "password": "qwerty123456"
+                         }
+                     """.trimIndent()
+                    )
+                }) {
+                    println(response.content)
+                    response
+                    assertEquals(HttpStatusCode.OK, response.status())
+                    token = JsonPath.read<String>(response.content!!, "$.token")
+                }
+                delay(5000)
+                with(handleRequest(HttpMethod.Get, "/api/v1/posts") {
+                    addHeader(HttpHeaders.Authorization, "Bearer $token")
+                }) {
+
+                    response
+                    print(response.content)
+                    assertEquals(HttpStatusCode.OK, response.status())
+                }
+            }
+        }
+    }
 
     @org.junit.Test
     fun testPosting() {
@@ -197,8 +233,8 @@ class ApplicationTest {
                     setBody(
                             """
                         {
-                            "username": "Вадим Аршинский",
-                            "password": "123456"
+                            "username": "Vadim",
+                            "password": "qwerty123456"
                         }
                     """.trimIndent()
                     )
@@ -218,24 +254,113 @@ class ApplicationTest {
                             """
                         {
                             "id": -1,
-                            "postType": "POSTBASIC",
-                            "author_name": "Вадим Аршинский",
-                            "content": "Тестовый пост!",
-                            "created":null,    
-                            "coord": null,
-                            "videoUrl": null,
-                            "repost": null,
-                            "promoImgUrl": null,
-                            "promoUrl": null
-                     }
+                            "sourceId": null,
+                            "content": "Test",
+                            "link": null,
+                            "attachmentId": null
+                        }
+                        """.trimIndent()
+                    )
+
+
+                }) {
+
+                    response
+                    assertEquals(HttpStatusCode.OK, response.status())
+                    val test = JsonPath.read<String>(response.content!!, "$.content")
+                    assertEquals("Test", test)
+                    print(response.content)
+                }
+            }
+        }
+    }
+
+    @org.junit.Test
+    fun testLike() {
+        withTestApplication(configure) {
+            runBlocking {
+                var token: String? = null
+                with(handleRequest(HttpMethod.Post, "/api/v1/authentication") {
+                    addHeader(HttpHeaders.ContentType, jsonContentType.toString())
+                    setBody(
+                            """
+                        {
+                            "username": "Vadim",
+                            "password": "qwerty123456"
+                        }
                     """.trimIndent()
                     )
                 }) {
                     println(response.content)
                     response
+
+                    token = JsonPath.read<String>(response.content!!, "$.token")
+                }
+
+                println("authorized")
+                with(handleRequest(HttpMethod.Post, "/api/v1/posts/like/1") {
+                    addHeader(HttpHeaders.Authorization, "Bearer $token")
+
+                }) {
+
+                    response
                     assertEquals(HttpStatusCode.OK, response.status())
                     val test = JsonPath.read<String>(response.content!!, "$.content")
-                    assertEquals("Тестовый пост!", test)
+                    assertEquals("Первый пост!! Привет мир!", test)
+                    print(response.content)
+                }
+            }
+        }
+    }
+
+    @org.junit.Test
+    fun testRePosting() {
+        withTestApplication(configure) {
+            runBlocking {
+                var token: String? = null
+                with(handleRequest(HttpMethod.Post, "/api/v1/authentication") {
+                    addHeader(HttpHeaders.ContentType, jsonContentType.toString())
+                    setBody(
+                            """
+                        {
+                            "username": "Donald",
+                            "password": "qwerty54321"
+                        }
+                    """.trimIndent()
+                    )
+                }) {
+                    println(response.content)
+                    response
+                    //assertEquals(HttpStatusCode.OK, response.status())
+                    token = JsonPath.read<String>(response.content!!, "$.token")
+                }
+
+                println("authorized")
+                with(handleRequest(HttpMethod.Post, "/api/v1/posts/share/1") {
+                    addHeader(HttpHeaders.Authorization, "Bearer $token")
+
+                    addHeader(HttpHeaders.ContentType, "application/json")
+
+                    setBody(
+                            """
+                        {
+                            "id": -1,
+                            "sourceId": null,
+                            "content": "Repost",
+                            "link": null,
+                            "attachmentId": null
+                        }
+                        """.trimIndent()
+                    )
+
+
+                }) {
+
+                    response
+                    assertEquals(HttpStatusCode.OK, response.status())
+                    val test = JsonPath.read<String>(response.content!!, "$.content")
+                    assertEquals("Repost", test)
+                    print(response.content)
                 }
             }
         }
