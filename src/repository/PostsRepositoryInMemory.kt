@@ -23,6 +23,12 @@ class PostsRepositoryInMemory() : PostsRepository {
         }
     }
 
+    override suspend fun getByIds(ids: Collection<Long>): List<Post> {
+        mutex.withLock {
+            return items.filter { ids.contains(it.id) }
+        }
+    }
+
     override suspend fun save(item: Post): Post {
         mutex.withLock {
             return when (val index = items.indexOfFirst { it.id == item.id }) {
@@ -32,7 +38,7 @@ class PostsRepositoryInMemory() : PostsRepository {
                     copy
                 }
                 else -> {
-                    val copy = items[index].copy(author = item.author, content = item.content)
+                    val copy = item.copy()
                     items[index] = copy
                     copy
                 }
@@ -83,6 +89,8 @@ class PostsRepositoryInMemory() : PostsRepository {
             }
         }
     }
+
+
 }
 
 

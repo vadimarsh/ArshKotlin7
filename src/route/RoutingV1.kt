@@ -39,6 +39,7 @@ class RoutingV1(
                         val input = call.receive<AuthenticationRequestDto>()
                         val response = userService.authenticate(input)
                         call.respond(response)
+                        print("recieve auth")
                     }
                 }
 
@@ -52,7 +53,8 @@ class RoutingV1(
 
                     route("/posts") {
                         get {
-                            val response = postService.getAll()
+                            val me = call.authentication.principal<Author>()!!
+                            val response = postService.getAll(myId = me.id)
                             call.respond(response)
                         }
                         get("/{id}") {
@@ -60,14 +62,17 @@ class RoutingV1(
                                     "id",
                                     "Long"
                             )
-                            val response = postService.getById(id)
+                            val me = call.authentication.principal<Author>()!!
+                            val response = postService.getById(id, me.id)
                             call.respond(response)
                         }
                         post {
+
                             val input = call.receive<PostRequestDto>()
+
                             val me = call.authentication.principal<Author>()!!
 
-                            val response = postService.save(input.copy(author = me.username))
+                            val response = postService.save(input, me.id)
                             call.respond(HttpStatusCode.OK, response)
                         }
                         post("/{id}") {
@@ -75,8 +80,8 @@ class RoutingV1(
                             val id = call.parameters["id"]?.toLongOrNull()
                                     ?: throw ParameterConversionException("id", "Long")
                             val input = call.receive<PostRequestDto>()
-                            if (postService.getById(id).author == me.username) {
-                                postService.save(input)
+                            if (postService.getById(id, me.id).authorId == me.id) {
+                                postService.save(input, me.id)
                                 call.respond(HttpStatusCode.Accepted)
                             } else {
                                 call.respond(HttpStatusCode.Forbidden)
@@ -86,8 +91,8 @@ class RoutingV1(
                             val me = call.authentication.principal<Author>()!!
                             val id = call.parameters["id"]?.toLongOrNull()
                                     ?: throw ParameterConversionException("id", "Long")
-                            if (postService.getById(id).author == me.username) {
-                                postService.delete(id)
+                            if (postService.getById(id, me.id).id == me.id) {
+                                postService.delete(id, me.id)
                                 call.respond(HttpStatusCode.OK)
                             } else {
                                 call.respond(HttpStatusCode.Forbidden)
@@ -108,24 +113,24 @@ class RoutingV1(
                             call.respond(response)
                         }
                         post("/share/{id}") {
+                            val input = call.receive<PostRequestDto>()
                             val id = call.parameters["id"]?.toLongOrNull()
                                     ?: throw ParameterConversionException("id", "Long")
                             val me = call.authentication.principal<Author>()!!
 
-                            val post = postService.getById(id)
+                            val post = postService.getById(id, me.id)
 
-                            val response = postService.share(post.id, me)
+                            val response = postService.share(input, post.id, me.id)
 
                             call.respond(response)
                         }
                     }
-                }
-
-                route("/media") {
-                    post {
-                        val multipart = call.receiveMultipart()
-                        val response = fileService.save(multipart)
-                        call.respond(response)
+                    route("/media") {
+                        post {
+                            val multipart = call.receiveMultipart()
+                            val response = fileService.save(multipart)
+                            call.respond(response)
+                        }
                     }
                 }
             }

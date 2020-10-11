@@ -73,6 +73,8 @@ fun Application.module(testing: Boolean = false) {
     install(KodeinFeature) {
         constant(tag = "upload-dir") with (environment.config.propertyOrNull("arsh.upload.dir")?.getString()
                 ?: throw ConfigurationException("Upload dir is not specified"))
+        constant(tag = "result-size") with (environment.config.propertyOrNull("arsh.api.result-size")?.getString()?.toInt()
+                ?: throw ConfigurationException("API result size is not specified"))
         bind<PasswordEncoder>() with eagerSingleton { BCryptPasswordEncoder() }
         bind<JWTTokenService>() with eagerSingleton { JWTTokenService() }
         bind<PostsRepository>() with eagerSingleton {
@@ -80,24 +82,22 @@ fun Application.module(testing: Boolean = false) {
                 runBlocking {
                     save(
                             Post(
-
-                                    postType = PostTypes.POSTBASIC,
+                                    id = -1,
                                     content = "Первый пост!! Привет мир!",
-                                    author = "Вадим Аршинский"
+                                    authorId = 1
                             )
                     )
                     save(
                             Post(
-                                    postType = PostTypes.POSTEVENT,
+                                    id = -1,
                                     content = "На острове Ольхон, который является сакральным центром силы Байкала, расположен мыс Шаманка, который является обиталещем главного бурхана всей территории",
-                                    coord = Pair("53.203965", "107.338867"),
-                                    author = "Вадим Аршинский"
+                                    authorId = 1
                             )
                     )
                 }
             }
         }
-        bind<PostService>() with eagerSingleton { PostService(instance()) }
+        bind<PostService>() with eagerSingleton { PostService(instance(), instance(), instance(tag = "result-size")) }
         bind<FileService>() with eagerSingleton { FileService(instance(tag = "upload-dir")) }
         bind<AuthorsRepository>() with eagerSingleton {
             AuthorsRepositoryInMemory()
@@ -105,8 +105,8 @@ fun Application.module(testing: Boolean = false) {
         bind<UserService>() with eagerSingleton {
             UserService(instance(), instance(), instance()).apply {
                 runBlocking {
-                    this@apply.save("Вадим Аршинский", "123456")
-                    this@apply.save("Дональд Трамп", "qwerty")
+                    this@apply.save("Vadim", "qwerty123456")
+                    this@apply.save("Donald", "qwerty54321")
                 }
             }
         }

@@ -9,5 +9,10 @@ data class UserResponseDto(val id: Long, val username: String) {
                 id = model.id,
                 username = model.username
         )
+
+        fun unknown() = UserResponseDto(
+                id = 0,
+                username = "unknown"
+        )
     }
 }

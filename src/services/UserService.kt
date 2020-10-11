@@ -24,6 +24,10 @@ class UserService(
         return UserResponseDto.fromModel(model)
     }
 
+    suspend fun getByIds(ids: Collection<Long>): List<UserResponseDto> {
+        return repo.getByIds(ids).map { UserResponseDto.fromModel(it) }
+    }
+
     suspend fun changePassword(id: Long, input: PasswordChangeRequestDto) {
         val model = repo.getById(id) ?: throw NotFoundException()
         if (!passwordEncoder.matches(input.old, model.password)) {
