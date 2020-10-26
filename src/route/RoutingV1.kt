@@ -38,7 +38,7 @@ class RoutingV1(
                     post("/authentication") {
                         val input = call.receive<AuthenticationRequestDto>()
                         val response = userService.authenticate(input)
-                        call.respond(response)
+                        call.respond(HttpStatusCode.OK, response)
                         print("recieve auth")
                     }
                 }

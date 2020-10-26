@@ -94,6 +94,13 @@ fun Application.module(testing: Boolean = false) {
                                     authorId = 1
                             )
                     )
+                    save(
+                            Post(
+                                    id = -1,
+                                    content = "Make the USA great again!",
+                                    authorId = 2
+                            )
+                    )
                 }
             }
         }
