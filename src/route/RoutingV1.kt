@@ -57,6 +57,11 @@ class RoutingV1(
                             val response = postService.getAll(myId = me.id)
                             call.respond(response)
                         }
+                        get("/newposts") {
+                            val me = call.authentication.principal<Author>()!!
+                            val response = postService.getNew(myId = me.id)
+                            call.respond(response)
+                        }
                         get("/{id}") {
                             val id = call.parameters["id"]?.toLongOrNull() ?: throw ParameterConversionException(
                                     "id",

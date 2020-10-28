@@ -4,7 +4,6 @@ import com.example.exception.ConfigurationException
 import com.example.exception.InvalidPasswordException
 import com.example.exception.UserNameExistException
 import com.example.model.Post
-import com.example.model.PostTypes
 
 import com.example.repository.AuthorsRepository
 import com.example.repository.AuthorsRepositoryInMemory
@@ -78,7 +77,7 @@ fun Application.module(testing: Boolean = false) {
         bind<PasswordEncoder>() with eagerSingleton { BCryptPasswordEncoder() }
         bind<JWTTokenService>() with eagerSingleton { JWTTokenService() }
         bind<PostsRepository>() with eagerSingleton {
-            PostsRepositoryInMemory().apply {
+            PostsRepositoryInMemory(instance(tag = "result-size")).apply {
                 runBlocking {
                     save(
                             Post(
@@ -99,6 +98,35 @@ fun Application.module(testing: Boolean = false) {
                                     id = -1,
                                     content = "Make the USA great again!",
                                     authorId = 2
+                            )
+                    )
+                    save(
+                            Post(
+                                    id = -1,
+                                    content = "I will won the vote anyway",
+                                    authorId = 2
+                            )
+                    )
+                    save(
+                            Post(
+                                    id = -1,
+                                    content = "Кажется я подхватил эту заразу",
+                                    authorId = 1
+                            )
+                    )
+
+                    save(
+                            Post(
+                                    id = -1,
+                                    content = "Устал от этой лабы уже",
+                                    authorId = 1
+                            )
+                    )
+                    save(
+                            Post(
+                                    id = -1,
+                                    content = "Конца края не видно",
+                                    authorId = 1
                             )
                     )
                 }

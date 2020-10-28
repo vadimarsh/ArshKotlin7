@@ -14,6 +14,10 @@ class PostService(private val repo: PostsRepository, private val userService: Us
         return combinePostsDto(repo.getAll(), myId)
     }
 
+    suspend fun getNew(myId: Long): List<PostResponseDto> {
+        return combinePostsDto(repo.getNewPosts(), myId)
+    }
+
     suspend fun getById(id: Long, myId: Long): PostResponseDto {
         val model = repo.getById(id) ?: throw NotFoundException()
         return combinePostDto(model, myId)
