@@ -6,7 +6,7 @@ import io.ktor.features.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class PostsRepositoryInMemory(val newCount: Int) : PostsRepository {
+class PostsRepositoryInMemory() : PostsRepository {
     private var nextId = 1L
     private val items = mutableListOf<Post>()
     private val mutex = Mutex()
@@ -16,11 +16,6 @@ class PostsRepositoryInMemory(val newCount: Int) : PostsRepository {
             return items.reversed()
         }
     }
-
-    override suspend fun getNewPosts(): List<Post> =
-            mutex.withLock {
-                items.takeLast(newCount).reversed()
-            }
 
     override suspend fun getById(id: Long): Post? {
         mutex.withLock {

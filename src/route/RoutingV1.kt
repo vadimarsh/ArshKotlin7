@@ -57,9 +57,27 @@ class RoutingV1(
                             val response = postService.getAll(myId = me.id)
                             call.respond(response)
                         }
-                        get("/newposts") {
+                        get("/recent") {
                             val me = call.authentication.principal<Author>()!!
-                            val response = postService.getNew(myId = me.id)
+                            val response = postService.getRecent(myId = me.id)
+                            call.respond(response)
+                        }
+                        get("/before/{id}") {
+                            val me = call.authentication.principal<Author>()!!
+                            val id = call.parameters["id"]?.toLongOrNull() ?: throw ParameterConversionException(
+                                    "id",
+                                    "Long"
+                            )
+                            val response = postService.getBefore(id, myId = me.id)
+                            call.respond(response)
+                        }
+                        get("/after/{id}") {
+                            val me = call.authentication.principal<Author>()!!
+                            val id = call.parameters["id"]?.toLongOrNull() ?: throw ParameterConversionException(
+                                    "id",
+                                    "Long"
+                            )
+                            val response = postService.getAfter(id, myId = me.id)
                             call.respond(response)
                         }
                         get("/{id}") {

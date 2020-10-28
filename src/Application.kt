@@ -77,7 +77,7 @@ fun Application.module(testing: Boolean = false) {
         bind<PasswordEncoder>() with eagerSingleton { BCryptPasswordEncoder() }
         bind<JWTTokenService>() with eagerSingleton { JWTTokenService() }
         bind<PostsRepository>() with eagerSingleton {
-            PostsRepositoryInMemory(instance(tag = "result-size")).apply {
+            PostsRepositoryInMemory().apply {
                 runBlocking {
                     save(
                             Post(

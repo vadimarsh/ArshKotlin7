@@ -14,8 +14,19 @@ class PostService(private val repo: PostsRepository, private val userService: Us
         return combinePostsDto(repo.getAll(), myId)
     }
 
-    suspend fun getNew(myId: Long): List<PostResponseDto> {
-        return combinePostsDto(repo.getNewPosts(), myId)
+    suspend fun getRecent(myId: Long): List<PostResponseDto> {
+        val posts = repo.getAll().take(resultSize)
+        return combinePostsDto(posts, myId)
+    }
+
+    suspend fun getBefore(id: Long, myId: Long): List<PostResponseDto> {
+        val posts = repo.getAll().asSequence().filter { it.id < id }.take(resultSize).toList()
+        return combinePostsDto(posts, myId)
+    }
+
+    suspend fun getAfter(id: Long, myId: Long): List<PostResponseDto> {
+        val posts = repo.getAll().asSequence().filter { it.id > id }.take(resultSize).toList()
+        return combinePostsDto(posts, myId)
     }
 
     suspend fun getById(id: Long, myId: Long): PostResponseDto {
